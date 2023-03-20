@@ -7,6 +7,9 @@ window.addEventListener('DOMContentLoaded', () => {
     contextBridge.exposeInMainWorld('actions', {
         setUrl: (url) => ipcRenderer.send('actions:setUrl', url),
         toggle: (url) => ipcRenderer.send('actions:toggle', url),
-        scrollDown: () => ipcRenderer.invoke('actions:scrollDown'),
+        scrollDown: (timeToScroll) =>
+            ipcRenderer.invoke('actions:scrollDown', timeToScroll),
+        onClickedElement: (callback) =>
+            ipcRenderer.on('clicked-element', callback),
     });
 });
