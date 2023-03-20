@@ -38,49 +38,6 @@ const createWindow = () => {
     }
 
     app.currentChildWindowURL = 'https://www.google.es';
-
-    ipcMain.on('actions:setUrl', (event, url) => {
-        app.currentChildWindowURL = url;
-
-        if (app.childWindow === undefined || app.childWindow.isDestroyed()) {
-            createPageWindow(app.mainWindow, app.currentChildWindowURL);
-        }
-
-        app.childWindow.loadURL(url);
-    });
-
-    ipcMain.on('actions:toggle', (event, url) => {
-        if (app.childWindow === undefined || app.childWindow.isDestroyed()) {
-            createPageWindow(app.mainWindow, app.currentChildWindowURL);
-        }
-
-        app.childWindow.show(!app.childWindow.isVisible);
-    });
-
-    ipcMain.handle('actions:scrollDown', () => {
-        app.childWindow.webContents.executeJavaScript(`
-            let height = 0;
-            let documentHeight = document.querySelector("body").scrollHeight;
-
-            const intervalCheck = setInterval(() => {
-                documentHeight = document.querySelector("body").scrollHeight;
-                if (height === documentHeight) {
-                    clearInterval(intervalScroll);
-                    clearInterval(intervalCheck);
-                } else {
-                    height = document.querySelector("body").scrollHeight
-                }
-            }, 3000);
-
-            const intervalScroll = setInterval(() => {
-                window.scrollTo(0, documentHeight);
-            }, 500);
-        `);
-    });
-
-    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
-        console.log(target);
-    });
 };
 
 const createPageWindow = (mainWindow, url) => {
@@ -128,6 +85,46 @@ app.whenReady().then(() => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
         }
+    });
+
+    ipcMain.on('actions:setUrl', (event, url) => {
+        app.currentChildWindowURL = url;
+
+        if (app.childWindow === undefined || app.childWindow.isDestroyed()) {
+            createPageWindow(app.mainWindow, app.currentChildWindowURL);
+        }
+
+        app.childWindow.loadURL(url);
+    });
+
+    ipcMain.on('actions:toggle', (event, url) => {
+        if (app.childWindow === undefined || app.childWindow.isDestroyed()) {
+            createPageWindow(app.mainWindow, app.currentChildWindowURL);
+        }
+
+        app.childWindow.show(!app.childWindow.isVisible);
+    });
+
+    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
+        app.mainWindow.webContents.send('clicked-element', target);
+    });
+
+    ipcMain.handle('actions:scrollDown', async (event, timeToScroll) => {
+        let response = await app.childWindow.webContents.executeJavaScript(
+            `
+                var intervalScroll = setInterval(() => {
+                    console.log("SCROLL!!!");
+                    window.scrollTo(0, document.querySelector("body").scrollHeight);
+                }, 1000);
+
+                setTimeout(() => {
+                    console.log("STOP SCROLL!!!", intervalScroll);
+                    clearInterval(intervalScroll);
+                }, ${timeToScroll})
+            `
+        );
+
+        return response;
     });
 });
 
