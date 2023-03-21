@@ -4,16 +4,16 @@ import { ref, onMounted } from 'vue';
 const selectedUrl = ref('https://www.google.es');
 const secondsToScroll = ref(1);
 const clickedElementInfo = ref({
-    className: '',
-    id: '',
-    innerHTML: '',
-    innerText: '',
-    localName: '',
-    nodeName: '',
-    outerHTML: '',
-    outerText: '',
-    tagName: '',
-    textContent: '',
+    // className: '',
+    // id: '',
+    // innerHTML: '',
+    // innerText: '',
+    // localName: '',
+    // nodeName: '',
+    // outerHTML: '',
+    // outerText: '',
+    // tagName: '',
+    // textContent: '',
 });
 
 const setUrl = () => {
@@ -31,6 +31,15 @@ const scrollDown = () => {
         '[HomeView] [scrollDown()] ' + secondsToScroll.value + ' seconds'
     );
     window.actions.scrollDown(secondsToScroll.value * 1000);
+};
+
+const selectElement = () => {
+    console.log('[HomeView] [selectElement()] ');
+    window.actions.selectElement();
+};
+
+const clearElement = () => {
+    clickedElementInfo.value = {};
 };
 
 onMounted(() => {
@@ -66,19 +75,47 @@ onMounted(() => {
                 </button>
             </section>
 
-            <section>
+            <article>
                 <h3>Choose your action:</h3>
-                <label>
-                    Scroll time in seconds:
-                    <input
-                        type="number"
-                        v-model="secondsToScroll"
-                        min="1"
-                        max="60"
-                    />
-                </label>
-                <button @click="scrollDown">Scroll Down</button>
-            </section>
+
+                <section>
+                    <label>
+                        Scroll time in seconds:
+                        <input
+                            type="number"
+                            v-model="secondsToScroll"
+                            min="1"
+                            max="60"
+                        />
+                    </label>
+                    <button @click="scrollDown">Scroll Down</button>
+                </section>
+
+                <section>
+                    <button @click="selectElement">Select an Element</button>
+                    <button
+                        v-if="Object.keys(clickedElementInfo).length !== 0"
+                        @click="clearElement"
+                    >
+                        Clear Element
+                    </button>
+                    <dl
+                        v-for="(info, index) in Object.keys(clickedElementInfo)"
+                        :key="index"
+                    >
+                        <dt>{{ info }} :</dt>
+
+                        <dd v-if="!['innerHTML', 'outerHTML'].includes(info)">
+                            {{ clickedElementInfo[info] }}
+                        </dd>
+                        <dd v-if="['innerHTML', 'outerHTML'].includes(info)">
+                            <span v-html="clickedElementInfo[info]"></span>
+                        </dd>
+                    </dl>
+                </section>
+            </article>
+
+            <hr />
         </article>
     </main>
 </template>
