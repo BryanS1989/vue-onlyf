@@ -11,8 +11,8 @@ const createWindow = () => {
     app.mainWindow = new BrowserWindow({
         x: 0,
         y: 0,
-        width: 375,
-        height: 375,
+        width: 768,
+        height: 1080,
         center: false,
         alwaysOnTop: false,
         roundedCorners: true,
@@ -87,6 +87,10 @@ app.whenReady().then(() => {
         }
     });
 
+    /**
+     * Called from main BrowserWindow.
+     * Set the selected URL to child browserWindow
+     */
     ipcMain.on('actions:setUrl', (event, url) => {
         app.currentChildWindowURL = url;
 
@@ -97,6 +101,10 @@ app.whenReady().then(() => {
         app.childWindow.loadURL(url);
     });
 
+    /**
+     * Called from main BrowserWindow.
+     * Show the child browserWindow
+     */
     ipcMain.on('actions:toggle', (event, url) => {
         if (app.childWindow === undefined || app.childWindow.isDestroyed()) {
             createPageWindow(app.mainWindow, app.currentChildWindowURL);
@@ -105,15 +113,14 @@ app.whenReady().then(() => {
         app.childWindow.show(!app.childWindow.isVisible);
     });
 
-    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
-        app.mainWindow.webContents.send('clicked-element', target);
-    });
-
+    /**
+     * Called from main BrowserWindow.
+     * Scroll down the child browserWindow the amount of time selected by user
+     */
     ipcMain.handle('actions:scrollDown', async (event, timeToScroll) => {
         let response = await app.childWindow.webContents.executeJavaScript(
             `
                 var intervalScroll = setInterval(() => {
-                    console.log("SCROLL!!!");
                     window.scrollTo(0, document.querySelector("body").scrollHeight);
                 }, 1000);
 
@@ -125,6 +132,47 @@ app.whenReady().then(() => {
         );
 
         return response;
+    });
+
+    /**
+     * Called from main BrowserWindow.
+     * Make click event on child BrowserWindow to not propagate,
+     * and send the selected element non child BrowserWindow to MainWindow
+     */
+    ipcMain.on('actions:selectElement', (event, url) => {
+        app.childWindow.webContents.executeJavaScript(
+            `
+                function preventAll() {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    window.actionsChild.sendClickedElement();
+                }
+            `
+        );
+    });
+
+    /**
+     * Called from Child BrowserWindow.
+     * Send to Main BrowserWindow the selected element on ChildWindow
+     * Let the click event continue at Child BrowserWindow
+     */
+    ipcMain.on('actionsChild:sendClickedElement', (event) => {
+        app.mainWindow.webContents.send('clicked-element', app.selectedElement);
+
+        app.childWindow.webContents.executeJavaScript(
+            `
+                function preventAll() {
+                }
+            `
+        );
+    });
+
+    /**
+     * Called from Child BrowserWindow.
+     * Save all clicked elements at child BrowserWindow
+     */
+    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
+        app.selectedElement = target;
     });
 });
 
