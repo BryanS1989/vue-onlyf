@@ -9,6 +9,7 @@ window.addEventListener('DOMContentLoaded', () => {
         toggle: (url) => ipcRenderer.send('actions:toggle', url),
         scrollDown: (timeToScroll) =>
             ipcRenderer.invoke('actions:scrollDown', timeToScroll),
+        selectElement: () => ipcRenderer.send('actions:selectElement'),
         onClickedElement: (callback) =>
             ipcRenderer.on('clicked-element', callback),
     });
