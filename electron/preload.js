@@ -12,5 +12,9 @@ window.addEventListener('DOMContentLoaded', () => {
         selectElement: () => ipcRenderer.send('actions:selectElement'),
         onClickedElement: (callback) =>
             ipcRenderer.on('clicked-element', callback),
+        countElements: (selector) =>
+            ipcRenderer.invoke('actions:countElements', selector),
+        onCountedElement: (callback) =>
+            ipcRenderer.on('counted-element', callback),
     });
 });

@@ -8,11 +8,18 @@ window.addEventListener('DOMContentLoaded', () => {
             ipcRenderer.send('actionsChild:setClickedElement', target),
         sendClickedElement: () =>
             ipcRenderer.send('actionsChild:sendClickedElement'),
+        sendCountedElement: (target) =>
+            ipcRenderer.send('actionsChild:sendCountedElement', target),
     });
 
     var body = document.querySelector('body');
     var script = document.createElement('script');
     script.innerText =
+        'function countElements(selector) {' +
+        '      var elementsSelected = document.querySelectorAll(selector);' +
+        '      console.log("There are  " + elementsSelected.length + " occurrences for the selector:" + selector);' +
+        '      window.actionsChild.sendCountedElement(elementsSelected.length);' +
+        '}' +
         'function preventAll() {' +
         '}' +
         "document.addEventListener('click', (event) => {" +

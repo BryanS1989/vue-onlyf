@@ -15,6 +15,7 @@ const clickedElementInfo = ref({
     // tagName: '',
     // textContent: '',
 });
+const numberOfOcurrences = ref(0);
 
 const setUrl = () => {
     console.log('[HomeView] [setUrl()] url: ', selectedUrl.value);
@@ -38,15 +39,55 @@ const selectElement = () => {
     window.actions.selectElement();
 };
 
+const countSelectedElement = () => {
+    console.log('[HomeView] [countSelectedElement()] ');
+
+    let cssQuerySelector = '';
+
+    if (
+        clickedElementInfo.value.tagName &&
+        clickedElementInfo.value.tagName !== ''
+    ) {
+        cssQuerySelector += `${clickedElementInfo.value.tagName.toLowerCase()}`;
+    }
+
+    if (
+        clickedElementInfo.value.className &&
+        clickedElementInfo.value.className !== ''
+    ) {
+        let classes = clickedElementInfo.value.className.replace(' ', '.');
+        cssQuerySelector += `.${classes}`;
+    }
+
+    window.actions.countElements(cssQuerySelector).then((response) => {
+        console.log('[HomeView] [countSelectedElement()] response: ', response);
+        // numberOfOcurrences
+    });
+};
+
 const clearElement = () => {
     clickedElementInfo.value = {};
 };
 
 onMounted(() => {
     window.actions.onClickedElement((_event, target) => {
-        console.log(target);
+        console.log(
+            '[HomeView] [onMounted] [onClickedElement] target: ',
+            target
+        );
 
         clickedElementInfo.value = target;
+
+        countSelectedElement();
+    });
+
+    window.actions.onCountedElement((_event, target) => {
+        console.log(
+            '[HomeView] [onMounted] [onCountedElement] target: ',
+            target
+        );
+
+        numberOfOcurrences.value = target;
     });
 });
 </script>
@@ -99,6 +140,12 @@ onMounted(() => {
                     >
                         Clear Element
                     </button>
+                    <dl v-if="Object.keys(clickedElementInfo).length !== 0">
+                        <dt>Number of occurrences:</dt>
+                        <dd>
+                            {{ numberOfOcurrences }}
+                        </dd>
+                    </dl>
                     <dl
                         v-for="(info, index) in Object.keys(clickedElementInfo)"
                         :key="index"

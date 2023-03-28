@@ -136,6 +136,21 @@ app.whenReady().then(() => {
 
     /**
      * Called from main BrowserWindow.
+     * Count elements on child browserWindow by a selector
+     */
+    ipcMain.handle('actions:countElements', async (event, selector) => {
+        console.log('[actions:countElements] selector: ' + selector);
+        let response = await app.childWindow.webContents.executeJavaScript(
+            `
+                countElements("${selector}");
+            `
+        );
+
+        return response;
+    });
+
+    /**
+     * Called from main BrowserWindow.
      * Make click event on child BrowserWindow to not propagate,
      * and send the selected element non child BrowserWindow to MainWindow
      */
@@ -149,6 +164,14 @@ app.whenReady().then(() => {
                 }
             `
         );
+    });
+
+    /**
+     * Called from Child BrowserWindow.
+     * Save all clicked elements at child BrowserWindow
+     */
+    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
+        app.selectedElement = target;
     });
 
     /**
@@ -168,11 +191,10 @@ app.whenReady().then(() => {
     });
 
     /**
-     * Called from Child BrowserWindow.
-     * Save all clicked elements at child BrowserWindow
+     * Send to main Browsert the number of occurrences of the selected element
      */
-    ipcMain.on('actionsChild:setClickedElement', (event, target) => {
-        app.selectedElement = target;
+    ipcMain.on('actionsChild:sendCountedElement', (event, target) => {
+        app.mainWindow.webContents.send('counted-element', target);
     });
 });
 
